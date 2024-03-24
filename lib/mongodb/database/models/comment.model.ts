@@ -9,4 +9,4 @@ const CommentSchema = new Schema({
 
 const Comment = models.Comment || model("Comment", CommentSchema);
 
-export default CommentSchema;
+export default Comment;

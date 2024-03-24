@@ -5,6 +5,7 @@ import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
 import NavItems from "@/components/shared/NavItems";
 import MobileNav from "@/components/shared/MobileNav";
+import NotificationIcon from "@/components/shared/NotifcationIcon";
 
 const Header = () => {
   return (
@@ -25,6 +26,7 @@ const Header = () => {
         </SignedIn>
         <div className={"flex w-32 justify-end gap-3"}>
           <SignedIn>
+            <NotificationIcon />
             <UserButton afterSignOutUrl={"/"} />
             <MobileNav />
           </SignedIn>

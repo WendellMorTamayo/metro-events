@@ -165,3 +165,15 @@ export async function getOrdersByUser({
     handleError(error);
   }
 }
+
+export async function deleteOrder(orderId: string) {
+  try {
+    await connectToDatabase();
+
+    const order = await Order.findByIdAndDelete(orderId);
+
+    return JSON.parse(JSON.stringify(order));
+  } catch (error) {
+    handleError(error);
+  }
+}

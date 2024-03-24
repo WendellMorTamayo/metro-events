@@ -1,7 +1,7 @@
 "use client";
 
 import { useTransition } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import Image from "next/image";
 
 import {
@@ -17,10 +17,12 @@ import {
 } from "@/components/ui/alert-dialog";
 
 import { deleteEvent } from "@/lib/mongodb/actions/event.actions";
+import { deleteOrder } from "@/lib/mongodb/actions/order.actions";
 
 export const DeleteConfirmation = ({ eventId }: { eventId: string }) => {
   const pathname = usePathname();
   let [isPending, startTransition] = useTransition();
+  const router = useRouter();
 
   return (
     <AlertDialog>

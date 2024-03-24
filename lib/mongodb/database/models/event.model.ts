@@ -17,6 +17,7 @@ export interface IEvent extends Document {
   organizer: { _id: string; firstName: string; lastName: string };
   upVotes: number;
   downVotes: number;
+  userVotes: string[];
 }
 
 const EventSchema = new Schema({
@@ -34,6 +35,7 @@ const EventSchema = new Schema({
   organizer: { type: Schema.Types.ObjectId, ref: "User" },
   upVotes: { type: Number, default: 0 },
   downVotes: { type: Number, default: 0 },
+  userVotes: [{ type: Schema.Types.ObjectId, ref: "User" }],
 });
 
 const Event = models.Event || model("Event", EventSchema);

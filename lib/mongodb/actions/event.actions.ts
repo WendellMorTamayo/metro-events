@@ -1,25 +1,29 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
+
+import { connectToDatabase } from "@/lib/mongodb/database";
+import Event from "@/lib/mongodb/database/models/event.model";
+import User from "@/lib/mongodb/database/models/user.model";
+import Category from "@/lib/mongodb/database/models/category.model";
+import { handleError } from "@/lib/utils";
+
 import {
   CreateEventParams,
+  UpdateEventParams,
   DeleteEventParams,
   GetAllEventsParams,
   GetEventsByUserParams,
   GetRelatedEventsByCategoryParams,
-  UpdateEventParams,
 } from "@/types";
-import { handleError } from "@/lib/utils";
-import { connectToDatabase } from "@/lib/mongodb/database";
-import User from "@/lib/mongodb/database/models/user.model";
-import Event from "@/lib/mongodb/database/models/event.model";
-import Category from "@/lib/mongodb/database/models/category.model";
-import { revalidatePath } from "next/cache";
+import { deleteOrder } from "@/lib/mongodb/actions/order.actions";
+import { useRouter } from "next/navigation";
 
 const getCategoryByName = async (name: string) => {
   return Category.findOne({ name: { $regex: name, $options: "i" } });
 };
 
-const populateEvent = async (query: any) => {
+const populateEvent = (query: any) => {
   return query
     .populate({
       path: "organizer",
@@ -29,68 +33,41 @@ const populateEvent = async (query: any) => {
     .populate({ path: "category", model: Category, select: "_id name" });
 };
 
-export const createEvent = async ({
-  event,
-  userId,
-  path,
-}: CreateEventParams) => {
+// CREATE
+export async function createEvent({ userId, event, path }: CreateEventParams) {
   try {
     await connectToDatabase();
+
     const organizer = await User.findById(userId);
-    if (!organizer) {
-      throw new Error("User not found");
-    }
+    if (!organizer) throw new Error("Organizer not found");
 
     const newEvent = await Event.create({
       ...event,
       category: event.categoryId,
       organizer: userId,
     });
+    revalidatePath(path);
+
     return JSON.parse(JSON.stringify(newEvent));
   } catch (error) {
     handleError(error);
   }
-};
+}
 
-export const getEventById = async (eventId: string) => {
+// GET ONE EVENT BY ID
+export async function getEventById(eventId: string) {
   try {
     await connectToDatabase();
+
     const event = await populateEvent(Event.findById(eventId));
 
-    if (!event) {
-      throw new Error("Event not found");
-    }
+    if (!event) throw new Error("Event not found");
+
     return JSON.parse(JSON.stringify(event));
   } catch (error) {
     handleError(error);
   }
-};
-
-export const getAllEvents = async ({
-  query,
-  limit = 6,
-  page,
-  category,
-}: GetAllEventsParams) => {
-  try {
-    await connectToDatabase();
-    const conditions = {};
-    const eventQuery = Event.find(conditions)
-      .sort({ createdAt: -1 })
-      .skip(0)
-      .limit(limit);
-
-    const events = await populateEvent(eventQuery);
-    const eventsCount = await Event.countDocuments(conditions);
-
-    return {
-      data: JSON.parse(JSON.stringify(events)),
-      totalPages: Math.ceil(eventsCount / limit),
-    };
-  } catch (error) {
-    handleError(error);
-  }
-};
+}
 
 // UPDATE
 export async function updateEvent({ userId, event, path }: UpdateEventParams) {
@@ -121,52 +98,55 @@ export async function deleteEvent({ eventId, path }: DeleteEventParams) {
     await connectToDatabase();
 
     const deletedEvent = await Event.findByIdAndDelete(eventId);
-    if (deletedEvent) revalidatePath(path);
+    if (deletedEvent) {
+      await deleteOrder(eventId);
+      revalidatePath(path);
+    }
   } catch (error) {
     handleError(error);
   }
 }
 
 // GET ALL EVENTS
-// export async function getAllEvents({
-//   query,
-//   limit = 6,
-//   page,
-//   category,
-// }: GetAllEventsParams) {
-//   try {
-//     await connectToDatabase();
-//
-//     const titleCondition = query
-//       ? { title: { $regex: query, $options: "i" } }
-//       : {};
-//     const categoryCondition = category
-//       ? await getCategoryByName(category)
-//       : null;
-//     const conditions = {
-//       $and: [
-//         titleCondition,
-//         categoryCondition ? { category: categoryCondition._id } : {},
-//       ],
-//     };
-//
-//     const skipAmount = (Number(page) - 1) * limit;
-//     const eventsQuery = Event.find(conditions)
-//       .sort({ createdAt: "desc" })
-//       .skip(skipAmount)
-//       .limit(limit);
-//
-//     const events = await populateEvent(eventsQuery);
-//     const eventsCount = await Event.countDocuments(conditions);
-//
-//     return {
-//       data: JSON.parse(JSON.stringify(events)),
-//       totalPages: Math.ceil(eventsCount / limit),
-//     };
-//   } catch (error) {
-//     handleError(error);
-//   }
-// }
+export async function getAllEvents({
+  query,
+  limit = 6,
+  page,
+  category,
+}: GetAllEventsParams) {
+  try {
+    await connectToDatabase();
+
+    const titleCondition = query
+      ? { title: { $regex: query, $options: "i" } }
+      : {};
+    const categoryCondition = category
+      ? await getCategoryByName(category)
+      : null;
+    const conditions = {
+      $and: [
+        titleCondition,
+        categoryCondition ? { category: categoryCondition._id } : {},
+      ],
+    };
+
+    const skipAmount = (Number(page) - 1) * limit;
+    const eventsQuery = Event.find(conditions)
+      .sort({ createdAt: "desc" })
+      .skip(skipAmount)
+      .limit(limit);
+
+    const events = await populateEvent(eventsQuery);
+    const eventsCount = await Event.countDocuments(conditions);
+
+    return {
+      data: JSON.parse(JSON.stringify(events)),
+      totalPages: Math.ceil(eventsCount / limit),
+    };
+  } catch (error) {
+    handleError(error);
+  }
+}
 
 // GET EVENTS BY ORGANIZER
 export async function getEventsByUser({

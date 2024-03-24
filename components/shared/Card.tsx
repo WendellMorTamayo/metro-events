@@ -12,6 +12,7 @@ type CardProps = {
   hidePrice?: boolean;
 };
 const Card = ({ event, hasOrderLink, hidePrice }: CardProps) => {
+  if (!event) return null;
   const { sessionClaims } = auth();
   const userId = sessionClaims?.userId;
 

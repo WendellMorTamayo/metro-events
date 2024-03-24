@@ -3,12 +3,20 @@ import Link from "next/link";
 import Image from "next/image";
 import Collection from "@/components/shared/Collection";
 import { getAllEvents } from "@/lib/mongodb/actions/event.actions";
+import Search from "@/components/shared/Search";
+import { SearchParamProps } from "@/types";
+import { ca } from "date-fns/locale";
+import CategoryFilter from "@/components/shared/CategoryFilter";
 
-export default async function Home() {
+export default async function Home({ searchParams }: SearchParamProps) {
+  const page = Number(searchParams?.page) || 1;
+  const searchText = (searchParams?.query as string) || "";
+  const category = (searchParams?.category as string) || "";
+
   const events = await getAllEvents({
-    query: "",
-    category: "",
-    page: 1,
+    query: searchText,
+    category,
+    page,
     limit: 6,
   });
 
@@ -52,7 +60,8 @@ export default async function Home() {
           Trust by <br /> Thousands of Events
         </h2>
         <div className={"flex w-full flex-col gap-5 md:flex-row"}>
-          Search CategoryFilter
+          <Search />
+          <CategoryFilter />
         </div>
         <Collection
           data={events?.data}
@@ -61,7 +70,7 @@ export default async function Home() {
           collectionType={"All_Events"}
           limit={6}
           page={1}
-          totalPages={2}
+          totalPages={events?.totalPages || 1}
         />
       </section>
     </>

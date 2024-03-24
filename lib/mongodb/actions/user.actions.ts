@@ -68,3 +68,14 @@ export async function deleteUser(clerkId: string) {
     handleError(error);
   }
 }
+
+export async function checkUserIsAdmin(clerkId: string): Promise<boolean> {
+  try {
+    const user = await User.findOne({ clerkId });
+    console.log(user.isAdmin);
+    return user && user.isAdmin;
+  } catch (error) {
+    console.error("Error checking user admin status:", error);
+    throw new Error("Failed to check user admin status");
+  }
+}
