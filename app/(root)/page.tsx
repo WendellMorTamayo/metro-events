@@ -5,6 +5,7 @@ import Collection from "@/components/shared/Collection";
 import { getAllEvents } from "@/lib/mongodb/actions/event.actions";
 
 export default async function Home() {
+  // @ts-ignore
   const events = await getAllEvents({
     query: {},
     category: "",
