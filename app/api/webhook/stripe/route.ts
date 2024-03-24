@@ -1,5 +1,6 @@
 import stripe from "stripe";
 import { NextResponse } from "next/server";
+// @ts-ignore
 import { createOrder } from "@/lib/mongodb/actions/order.actions";
 
 export async function POST(request: Request) {
