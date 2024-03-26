@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState, useTransition } from "react";
 
 import { IEvent } from "@/lib/mongodb/database/models/event.model";
 import { SignedIn, SignedOut, useUser } from "@clerk/nextjs";
@@ -8,7 +8,16 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import Checkout from "./Checkout";
 
-const CheckOutButton = ({ event }: { event: IEvent }) => {
+const CheckOutButton = ({
+  event,
+  participants,
+  hasPurchased,
+}: {
+  event: IEvent;
+  participants: string[];
+  hasPurchased: boolean;
+}) => {
+  const [isPending, startTransition] = useTransition();
   const { user } = useUser();
   const userId = user?.publicMetadata.userId as string;
   const hasEventFinished = new Date(event.endDateTime) < new Date();
@@ -27,7 +36,11 @@ const CheckOutButton = ({ event }: { event: IEvent }) => {
             </Button>
           </SignedOut>
           <SignedIn>
-            <Checkout event={event} userId={userId} />
+            <Checkout
+              event={event}
+              userId={userId}
+              hasPurchased={hasPurchased}
+            />
           </SignedIn>
         </>
       )}

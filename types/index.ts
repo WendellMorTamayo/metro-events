@@ -114,11 +114,9 @@ export type CheckoutOrderParams = {
 };
 
 export type CreateOrderParams = {
-  stripeId: string;
   eventId: string;
   buyerId: string;
   totalAmount: string;
-  createdAt: Date;
 };
 
 export type GetOrdersByEventParams = {

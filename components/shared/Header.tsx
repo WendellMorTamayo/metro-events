@@ -5,9 +5,9 @@ import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
 import NavItems from "@/components/shared/NavItems";
 import MobileNav from "@/components/shared/MobileNav";
-import NotificationIcon from "@/components/shared/NotifcationIcon";
+import NotificationButton from "@/components/shared/NotifcationIcon";
 
-const Header = () => {
+const Header = ({ isAdmin }: { isAdmin?: boolean }) => {
   return (
     <header className={"w-full border-b"}>
       <div className={"wrapper flex items-center justify-between"}>
@@ -19,16 +19,18 @@ const Header = () => {
             height={20}
           />
         </Link>
-        <SignedIn>
-          <nav className={"md:flex-between hidden w-full max-w-xs"}>
-            <NavItems />
-          </nav>
-        </SignedIn>
-        <div className={"flex w-32 justify-end gap-3"}>
+        {!isAdmin && (
           <SignedIn>
-            <NotificationIcon />
+            <nav className={"md:flex-between hidden w-full max-w-xs"}>
+              <NavItems />
+            </nav>
+          </SignedIn>
+        )}
+        <div className={"flex w-32 items-center justify-end gap-3"}>
+          <SignedIn>
+            {!isAdmin && <NotificationButton />}
             <UserButton afterSignOutUrl={"/"} />
-            <MobileNav />
+            {!isAdmin && <MobileNav />}
           </SignedIn>
           <SignedOut>
             <Button asChild className={"rounded-full"} size={"lg"}>

@@ -19,7 +19,7 @@ const ProfilePage = async ({ searchParams }: SearchParamProps) => {
 
   const orderedEvents = orders?.data.map((order: IOrder) => order.event) || [];
   const organizedEvents = await getEventsByUser({ userId, page: eventsPage });
-
+  console.log("orderedEvents: ", orderedEvents);
   return (
     <>
       {/* My Tickets */}
@@ -41,7 +41,7 @@ const ProfilePage = async ({ searchParams }: SearchParamProps) => {
           limit={3}
           page={ordersPage}
           urlParamName="ordersPage"
-          totalPages={orderedEvents?.totalPages || 1}
+          totalPages={orders?.totalPages}
         />
       </section>
 
@@ -64,7 +64,7 @@ const ProfilePage = async ({ searchParams }: SearchParamProps) => {
           limit={3}
           page={eventsPage}
           urlParamName="eventsPage"
-          totalPages={organizedEvents?.totalPages || 1}
+          totalPages={organizedEvents?.totalPages}
         />
       </section>
     </>

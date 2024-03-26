@@ -59,11 +59,13 @@ export async function getEventById(eventId: string) {
   try {
     await connectToDatabase();
 
-    const event = await populateEvent(Event.findById(eventId));
+    const event = Event.findById(eventId);
 
     if (!event) throw new Error("Event not found");
+    // if (!event.isApproved) throw new Error("Event has not been approved yet!");
 
-    return JSON.parse(JSON.stringify(event));
+    const e = await populateEvent(event);
+    return JSON.parse(JSON.stringify(e));
   } catch (error) {
     handleError(error);
   }
@@ -102,6 +104,48 @@ export async function deleteEvent({ eventId, path }: DeleteEventParams) {
       await deleteOrder(eventId);
       revalidatePath(path);
     }
+  } catch (error) {
+    handleError(error);
+  }
+}
+
+// GET ALL APPROVED EVENTS
+export async function getAllApprovedEvents({
+  query,
+  limit = 6,
+  page,
+  category,
+}: GetAllEventsParams) {
+  try {
+    await connectToDatabase();
+
+    const titleCondition = query
+      ? { title: { $regex: query, $options: "i" } }
+      : {};
+    const categoryCondition = category
+      ? await getCategoryByName(category)
+      : null;
+    const conditions = {
+      $and: [
+        titleCondition,
+        categoryCondition ? { category: categoryCondition._id } : {},
+        { isApproved: true },
+      ],
+    };
+
+    const skipAmount = (Number(page) - 1) * limit;
+    const eventsQuery = Event.find(conditions)
+      .sort({ createdAt: "desc" })
+      .skip(skipAmount)
+      .limit(limit);
+
+    const events = await populateEvent(eventsQuery);
+    const eventsCount = await Event.countDocuments(conditions);
+
+    return {
+      data: JSON.parse(JSON.stringify(events)),
+      totalPages: Math.ceil(eventsCount / limit),
+    };
   } catch (error) {
     handleError(error);
   }
@@ -189,7 +233,12 @@ export async function getRelatedEventsByCategory({
 
     const skipAmount = (Number(page) - 1) * limit;
     const conditions = {
-      $and: [{ category: categoryId }, { _id: { $ne: eventId } }],
+      $and: [
+        { category: categoryId },
+        { _id: { $ne: eventId } },
+        { isApproved: true },
+        { location: { $ne: null } },
+      ],
     };
 
     const eventsQuery = Event.find(conditions)
@@ -204,6 +253,113 @@ export async function getRelatedEventsByCategory({
       data: JSON.parse(JSON.stringify(events)),
       totalPages: Math.ceil(eventsCount / limit),
     };
+  } catch (error) {
+    handleError(error);
+  }
+}
+
+export async function checkEventApproved(eventId: string) {
+  try {
+    await connectToDatabase();
+
+    const user = await Event.findById(eventId);
+    return user && user.isAdmin;
+  } catch (error) {
+    handleError(error);
+  }
+}
+
+type UpVoteEventProps = {
+  eventId: string;
+  userId: string;
+};
+export async function upVoteEvent({ eventId, userId }: UpVoteEventProps) {
+  try {
+    await connectToDatabase();
+
+    const event = await Event.findById(eventId);
+    console.log("EVENT: ", event.upVoters.length);
+    if (!event) {
+      throw new Error("Event not found");
+    }
+
+    const upVoters = event.upVoters;
+    let upVotes = event.upVotes;
+    if (upVoters.includes(userId)) {
+      upVotes -= 1;
+      upVoters.pull(userId);
+      await Event.findByIdAndUpdate(
+        eventId,
+        { upVoters, upVotes },
+        { new: true },
+      );
+      return JSON.parse(JSON.stringify(upVoters));
+    }
+    upVotes += 1;
+    upVoters.push(userId);
+    await Event.findByIdAndUpdate(
+      eventId,
+      { upVoters, upVotes },
+      { new: true },
+    );
+
+    return JSON.parse(JSON.stringify(upVoters));
+  } catch (error) {
+    handleError(error);
+  }
+}
+
+export const checkUserUpvoted = async (eventId: string, userId: string) => {
+  try {
+    await connectToDatabase();
+
+    const event = await Event.findById(eventId);
+    return event?.upVoters.includes(userId);
+  } catch (error) {
+    handleError(error);
+  }
+};
+
+export async function getAllUpvoters(eventId: string) {
+  try {
+    await connectToDatabase();
+
+    const event = await Event.findById(eventId);
+    return JSON.parse(
+      JSON.stringify({
+        userUpVotes: event?.upVoters,
+        upvoteCount: event?.upVoters.countDocuments(),
+      }),
+    );
+  } catch (error) {
+    handleError(error);
+  }
+}
+
+export async function getEventParticipants(eventId: string) {
+  try {
+    await connectToDatabase();
+
+    const event = await Event.findById(eventId);
+    return JSON.parse(
+      JSON.stringify({
+        participants: event?.participants,
+        participantsCount: event?.participants.length,
+      }),
+    );
+  } catch (error) {
+    handleError(error);
+  }
+}
+
+export async function checkUserHasPurchasedTickets(
+  eventId: string,
+  userId: string,
+) {
+  try {
+    await connectToDatabase();
+    const event = await Event.findById(eventId);
+    return event?.participants.includes(userId);
   } catch (error) {
     handleError(error);
   }

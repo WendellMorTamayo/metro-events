@@ -16,8 +16,10 @@ export interface IEvent extends Document {
   category: { _id: string; name: string };
   organizer: { _id: string; firstName: string; lastName: string };
   upVotes: number;
-  downVotes: number;
-  userVotes: string[];
+  upVoters: string[];
+  participants: string[];
+  participantCount: number;
+  isApproved: boolean;
 }
 
 const EventSchema = new Schema({
@@ -34,8 +36,10 @@ const EventSchema = new Schema({
   category: { type: Schema.Types.ObjectId, ref: "Category" },
   organizer: { type: Schema.Types.ObjectId, ref: "User" },
   upVotes: { type: Number, default: 0 },
-  downVotes: { type: Number, default: 0 },
-  userVotes: [{ type: Schema.Types.ObjectId, ref: "User" }],
+  upVoters: [{ type: Schema.Types.ObjectId, ref: "User" }],
+  participants: [{ type: Schema.Types.ObjectId, ref: "User" }],
+  participantCount: { type: Number, default: 0 },
+  isApproved: { type: Boolean, default: false },
 });
 
 const Event = models.Event || model("Event", EventSchema);

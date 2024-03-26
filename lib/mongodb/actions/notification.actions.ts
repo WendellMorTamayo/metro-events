@@ -9,16 +9,11 @@ export async function sendNotification(userId: string, message: string) {
   try {
     await connectToDatabase();
 
-    // Create a new notification
     const notification = await Notification.create({ user: userId, message });
 
-    // Associate the notification with the user
     await User.findByIdAndUpdate(userId, {
       $push: { notifications: notification._id },
     });
-
-    // Here you can implement logic to actually send the notification (e.g., via email, push notification, etc.)
-    // For demonstration purposes, let's just log the notification
     console.log("Notification sent:", notification);
 
     return notification;

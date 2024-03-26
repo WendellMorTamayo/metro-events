@@ -7,6 +7,7 @@ import User from "@/lib/mongodb/database/models/user.model";
 import Event from "@/lib/mongodb/database/models/event.model";
 import Order from "@/lib/mongodb/database/models/order.model";
 import { revalidatePath } from "next/cache";
+import Category from "@/lib/mongodb/database/models/category.model";
 
 export const createUser = async (user: CreateUserParams) => {
   try {
@@ -69,13 +70,51 @@ export async function deleteUser(clerkId: string) {
   }
 }
 
-export async function checkUserIsAdmin(clerkId: string): Promise<boolean> {
+export async function checkUserIsAdmin(clerkId: string) {
   try {
-    const user = await User.findOne({ clerkId });
-    console.log(user.isAdmin);
+    await connectToDatabase();
+
+    const user = await User.findById(clerkId);
     return user && user.isAdmin;
   } catch (error) {
-    console.error("Error checking user admin status:", error);
-    throw new Error("Failed to check user admin status");
+    handleError(error);
   }
 }
+
+export async function makeUserAdmin(clerkId: string) {
+  try {
+    await connectToDatabase();
+
+    const user = await User.findByIdAndUpdate(
+      { clerkId },
+      { isAdmin: true },
+      { new: true },
+    );
+
+    if (!user) throw new Error("User update failed");
+    return JSON.parse(JSON.stringify(user));
+  } catch (error) {
+    handleError(error);
+  }
+}
+
+export const getAllUsers = async () => {
+  try {
+    await connectToDatabase();
+    const users = await User.findOne();
+    console.log(users);
+    return JSON.parse(JSON.stringify(users));
+  } catch (error) {
+    handleError(error);
+  }
+};
+
+export const getUserById = async (clerkId: string) => {
+  try {
+    await connectToDatabase();
+    const user = await User.findById(clerkId);
+    return JSON.parse(JSON.stringify(user));
+  } catch (error) {
+    handleError(error);
+  }
+};

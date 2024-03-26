@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import Image from "next/image";
 import Collection from "@/components/shared/Collection";
-import { getAllEvents } from "@/lib/mongodb/actions/event.actions";
+import { getAllApprovedEvents } from "@/lib/mongodb/actions/event.actions";
 import Search from "@/components/shared/Search";
 import { SearchParamProps } from "@/types";
 import { ca } from "date-fns/locale";
@@ -13,7 +13,7 @@ export default async function Home({ searchParams }: SearchParamProps) {
   const searchText = (searchParams?.query as string) || "";
   const category = (searchParams?.category as string) || "";
 
-  const events = await getAllEvents({
+  const events = await getAllApprovedEvents({
     query: searchText,
     category,
     page,

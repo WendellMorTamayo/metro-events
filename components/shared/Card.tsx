@@ -5,6 +5,7 @@ import { formatDateTime } from "@/lib/utils";
 import Image from "next/image";
 import { auth } from "@clerk/nextjs";
 import { DeleteConfirmation } from "@/components/shared/DeleteConfirmation";
+import { HeartButton } from "@/components/shared/HeartButton";
 
 type CardProps = {
   event: IEvent;
@@ -14,10 +15,10 @@ type CardProps = {
 const Card = ({ event, hasOrderLink, hidePrice }: CardProps) => {
   if (!event) return null;
   const { sessionClaims } = auth();
-  const userId = sessionClaims?.userId;
-
+  const userId = sessionClaims?.userId as string;
+  console.log("USER ID: ", event);
   const isEventCreator = userId === event.organizer._id.toString();
-
+  const isUpvoted: boolean = event.upVoters.includes(userId);
   return (
     <div
       className={
@@ -50,26 +51,37 @@ const Card = ({ event, hasOrderLink, hidePrice }: CardProps) => {
       )}
       <div className={"flex min-h-[230px] flex-col gap-3 p-5 md:gap-4"}>
         {!hidePrice && (
-          <div className={"flex gap-2"}>
-            <span
-              className={
-                "p-semibold-14 w-min rounded-full bg-green-100 px-4 py-1 text-green-600"
-              }
-            >
-              {event.isFree ? "FREE" : `$${event.price}`}
-            </span>
-            <p
-              className={
-                "p-semibold-14 w-min rounded-full bg-grey-500/10 px-4 py-1 text-grey-500 line-clamp-1"
-              }
-            >
-              {event.category.name}
-            </p>
+          <div className={"flex flex-between"}>
+            <div className={"flex gap-2"}>
+              <span
+                className={
+                  "p-semibold-14 w-min rounded-full bg-green-100 px-4 py-1 text-green-600"
+                }
+              >
+                {event.isFree ? "FREE" : `$${event.price}`}
+              </span>
+              <p
+                className={
+                  "p-semibold-14 w-min rounded-full bg-grey-500/10 px-4 py-1 text-grey-500 line-clamp-1"
+                }
+              >
+                {event.category.name}
+              </p>
+            </div>
+            <div className={"h-14 w-14 absolute justify-start right-7"}>
+              <HeartButton
+                eventId={event._id}
+                userId={userId}
+                isUpvoted={isUpvoted}
+              />
+            </div>
           </div>
         )}
+
         <p className={"p-medium-16 md:p-medium-18 text-grey-600"}>
           {formatDateTime(event.startDate).dateTime}
         </p>
+
         <Link href={`/events/${event._id}`}>
           <p
             className={

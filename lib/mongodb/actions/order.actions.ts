@@ -17,7 +17,6 @@ import User from "../database/models/user.model";
 
 export const checkoutOrder = async (order: CheckoutOrderParams) => {
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
-
   const price = order.isFree ? 0 : Number(order.price) * 100;
 
   try {
@@ -154,6 +153,7 @@ export async function getOrdersByUser({
         },
       });
 
+    console.log("ORDERSSS: ", orders);
     const ordersCount =
       await Order.distinct("event._id").countDocuments(conditions);
 

@@ -17,7 +17,6 @@ import {
 } from "@/components/ui/alert-dialog";
 
 import { deleteEvent } from "@/lib/mongodb/actions/event.actions";
-import { deleteOrder } from "@/lib/mongodb/actions/order.actions";
 
 export const DeleteConfirmation = ({ eventId }: { eventId: string }) => {
   const pathname = usePathname();

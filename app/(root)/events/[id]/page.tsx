@@ -1,6 +1,8 @@
 import React from "react";
 import { SearchParamProps } from "@/types";
 import {
+  checkUserHasPurchasedTickets,
+  checkUserUpvoted,
   getEventById,
   getRelatedEventsByCategory,
 } from "@/lib/mongodb/actions/event.actions";
@@ -8,11 +10,18 @@ import Image from "next/image";
 import { formatDateTime } from "@/lib/utils";
 import Collection from "@/components/shared/Collection";
 import CheckOutButton from "@/components/shared/CheckOutButton";
+import { HeartButton } from "@/components/shared/HeartButton";
+import { auth } from "@clerk/nextjs";
+import { DataTable } from "@/components/shared/DataTable";
+import { columns } from "@/components/shared/columns";
+import { getParticipantsByEvent } from "@/lib/mongodb/actions/participant.actions";
 
 const EventDetails = async ({
   params: { id },
   searchParams,
 }: SearchParamProps) => {
+  const { sessionClaims } = auth();
+  const userId = sessionClaims?.userId as string;
   const event = await getEventById(id);
 
   const relatedEvents = await getRelatedEventsByCategory({
@@ -20,6 +29,12 @@ const EventDetails = async ({
     eventId: id,
     page: searchParams.page as string,
   });
+
+  const isUpvoted = await checkUserUpvoted(id, userId);
+  const participants = await getParticipantsByEvent(id);
+  const hasPurchased = participants
+    ? participants.user.includes(userId)
+    : false;
   return (
     <>
       <section
@@ -65,7 +80,15 @@ const EventDetails = async ({
                 </p>
               </div>
             </div>
-            <CheckOutButton event={event} />
+            <div className={"flex flex-row justify-start items-center"}>
+              <HeartButton eventId={id} userId={userId} isUpvoted={isUpvoted} />
+              <CheckOutButton
+                event={event}
+                participants={[participants]}
+                hasPurchased={hasPurchased}
+              />
+            </div>
+
             <div className={"flex flex-col gap-5"}>
               <div className={"flex gap-2 md:gap-3"}>
                 <Image
@@ -116,6 +139,10 @@ const EventDetails = async ({
             </div>
           </div>
         </div>
+      </section>
+      <section className={"wrapper my-8 flex flex-col gap-8 md:gap-12"}>
+        <h2 className={"h2-bold"}>Related Events</h2>
+        {participants && <DataTable columns={columns} data={participants} />}
       </section>
       <section className={"wrapper my-8 flex flex-col gap-8 md:gap-12"}>
         <h2 className={"h2-bold"}>Related Events</h2>

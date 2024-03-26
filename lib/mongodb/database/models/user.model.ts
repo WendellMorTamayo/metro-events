@@ -8,6 +8,7 @@ const UserSchema = new Schema({
   lastName: { type: String, required: true },
   photo: { type: String, required: true },
   isAdmin: { type: Boolean, default: false },
+  notifications: [{ type: Schema.Types.ObjectId, ref: "Notification" }],
 });
 
 const User = models.User || model("User", UserSchema);

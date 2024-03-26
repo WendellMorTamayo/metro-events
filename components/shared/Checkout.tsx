@@ -1,48 +1,54 @@
-import React, { useEffect } from "react";
+"use client";
+
+import React, { useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { IEvent } from "@/lib/mongodb/database/models/event.model";
+import { getAllUsers, getUserById } from "@/lib/mongodb/actions/user.actions";
+import { createParticipant } from "@/lib/mongodb/actions/participant.actions";
+import { createOrder } from "@/lib/mongodb/actions/order.actions";
 
-import { loadStripe } from "@stripe/stripe-js";
-import { checkoutOrder } from "@/lib/mongodb/actions/order.actions";
+export const Checkout = ({
+  event,
+  userId,
+  hasPurchased,
+}: {
+  event: IEvent;
+  userId: string;
+  hasPurchased: boolean;
+}) => {
+  const [active, setActive] = useState(hasPurchased);
+  let [isPending, startTransition] = useTransition();
 
-loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
-
-const Checkout = ({ event, userId }: { event: IEvent; userId: string }) => {
-  const onCheckout = async () => {
-    const order = {
-      eventTitle: event.title,
-      eventId: event._id,
-      price: event.price,
-      isFree: event.isFree,
-      buyerId: userId,
-    };
-    await checkoutOrder(order);
+  const handleClick = async () => {
+    setActive(!active);
+    startTransition(async () => {
+      const user = await getUserById(userId);
+      const response = await createParticipant({
+        name: user.firstName + " " + user.lastName,
+        email: user.email,
+        userId: userId,
+        eventId: event._id,
+      });
+      const order = await createOrder({
+        eventId: event._id,
+        buyerId: userId,
+        totalAmount: event.isFree ? "0" : event.price,
+      });
+      console.log(response);
+    });
   };
 
-  useEffect(() => {
-    const query = new URLSearchParams(window.location.search);
-    if (query.get("success")) {
-      console.log("Order placed! You will receive an email confirmation.");
-    }
-
-    if (query.get("canceled")) {
-      console.log(
-        "Order canceled -- continue to shop around and checkout when you’re ready.",
-      );
-    }
-  }, []);
-
   return (
-    <form action={onCheckout} method={"post"}>
-      <Button
-        type={"submit"}
-        role={"link"}
-        size={"lg"}
-        className="button sm:w-fit"
-      >
-        {event.isFree ? "Get Tickets" : `Buy Tickets`}
-      </Button>
-    </form>
+    <Button
+      type={"submit"}
+      role={"link"}
+      size={"lg"}
+      className="button sm:w-fit"
+      onClick={handleClick}
+      disabled={active}
+    >
+      {event.isFree ? (isPending ? "Joining..." : "Join Event") : `Buy Tickets`}
+    </Button>
   );
 };
 export default Checkout;
