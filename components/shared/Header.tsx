@@ -6,8 +6,9 @@ import { Button } from "@/components/ui/button";
 import NavItems from "@/components/shared/NavItems";
 import MobileNav from "@/components/shared/MobileNav";
 import NotificationButton from "@/components/shared/NotifcationIcon";
+import { ModeToggle } from "@/components/shared/ModeToggle";
 
-const Header = ({ isAdmin }: { isAdmin?: boolean }) => {
+const Header = ({ isAdmin, userId }: { isAdmin: boolean; userId: string }) => {
   return (
     <header className={"w-full border-b"}>
       <div className={"wrapper flex items-center justify-between"}>
@@ -19,17 +20,17 @@ const Header = ({ isAdmin }: { isAdmin?: boolean }) => {
             height={20}
           />
         </Link>
-        {!isAdmin && (
+        <SignedIn>
+          <nav className={"md:flex-between hidden w-full max-w-xs"}>
+            <NavItems isAdmin={isAdmin} />
+          </nav>
+        </SignedIn>
+        <div className={"flex w-48 items-center justify-end gap-3"}>
           <SignedIn>
-            <nav className={"md:flex-between hidden w-full max-w-xs"}>
-              <NavItems />
-            </nav>
-          </SignedIn>
-        )}
-        <div className={"flex w-32 items-center justify-end gap-3"}>
-          <SignedIn>
-            {!isAdmin && <NotificationButton />}
+            <NotificationButton userId={userId} />
+            <ModeToggle />
             <UserButton afterSignOutUrl={"/"} />
+
             {!isAdmin && <MobileNav />}
           </SignedIn>
           <SignedOut>

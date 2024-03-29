@@ -30,19 +30,16 @@ export default async function Home({ searchParams }: SearchParamProps) {
           className={"wrapper grid grid-cols-1 gap-5 md:grid-cols-2 2xl:gap-0"}
         >
           <div className={"flex flex-col justify-center gap-8"}>
-            <h1 className={"h1-bold"}>
-              Host, Connect, Celebrate: Your Events, Our Platform!
-            </h1>
+            <h1 className={"h1-bold"}>Events Redefined, Memories Refined.</h1>
             <p className={"p-regular-20 md:p-regular-24"}>
-              Book and learn helpful tips from 3,168+ mentors in world-class
-              companies with our global community.
+              Unlock Wisdom: Learn from 3,168+ World-Class Mentors.
             </p>
             <Button size={"lg"} asChild className={"button w-full sm:w-fit"}>
               <Link href={"#events"}>Explore Now</Link>
             </Button>
           </div>
           <Image
-            src={"/assets/images/hero.png"}
+            src={"/assets/images/sample.png"}
             alt={"hero"}
             width={1000}
             height={1000}

@@ -11,10 +11,12 @@ export const Checkout = ({
   event,
   userId,
   hasPurchased,
+  hasParticipated,
 }: {
   event: IEvent;
   userId: string;
   hasPurchased: boolean;
+  hasParticipated: boolean;
 }) => {
   const [active, setActive] = useState(hasPurchased);
   let [isPending, startTransition] = useTransition();
@@ -23,18 +25,12 @@ export const Checkout = ({
     setActive(!active);
     startTransition(async () => {
       const user = await getUserById(userId);
-      const response = await createParticipant({
-        name: user.firstName + " " + user.lastName,
-        email: user.email,
-        userId: userId,
-        eventId: event._id,
-      });
       const order = await createOrder({
         eventId: event._id,
         buyerId: userId,
         totalAmount: event.isFree ? "0" : event.price,
       });
-      console.log(response);
+      console.log(order);
     });
   };
 
@@ -45,9 +41,9 @@ export const Checkout = ({
       size={"lg"}
       className="button sm:w-fit"
       onClick={handleClick}
-      disabled={active}
+      disabled={active || !hasParticipated}
     >
-      {event.isFree ? (isPending ? "Joining..." : "Join Event") : `Buy Tickets`}
+      {active ? "Purchased" : isPending ? "Joining..." : "Buy Ticket"}
     </Button>
   );
 };

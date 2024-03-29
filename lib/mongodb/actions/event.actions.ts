@@ -109,6 +109,42 @@ export async function deleteEvent({ eventId, path }: DeleteEventParams) {
   }
 }
 
+export async function approveEvent(eventId: string) {
+  try {
+    await connectToDatabase();
+
+    const event = await Event.findByIdAndUpdate(
+      eventId,
+      { isApproved: true },
+      { new: true },
+    )
+      .populate({
+        path: "organizer",
+        model: User,
+        select: "_id firstName lastName",
+      })
+      .populate({ path: "category", model: Category, select: "_id name" });
+
+    return JSON.parse(JSON.stringify(event));
+  } catch (e) {
+    handleError(e);
+  }
+}
+
+export async function deleteEventAsAdmin(eventId: string) {
+  try {
+    await connectToDatabase();
+
+    const deletedEvent = await Event.findByIdAndDelete(eventId);
+    if (deletedEvent) {
+      await deleteOrder(eventId);
+      return JSON.parse(JSON.stringify(deletedEvent));
+    }
+  } catch (error) {
+    handleError(error);
+  }
+}
+
 // GET ALL APPROVED EVENTS
 export async function getAllApprovedEvents({
   query,
@@ -135,7 +171,7 @@ export async function getAllApprovedEvents({
 
     const skipAmount = (Number(page) - 1) * limit;
     const eventsQuery = Event.find(conditions)
-      .sort({ createdAt: "desc" })
+      .sort({ createdAt: "asc" })
       .skip(skipAmount)
       .limit(limit);
 
@@ -146,6 +182,17 @@ export async function getAllApprovedEvents({
       data: JSON.parse(JSON.stringify(events)),
       totalPages: Math.ceil(eventsCount / limit),
     };
+  } catch (error) {
+    handleError(error);
+  }
+}
+
+export async function getNotApprovedEvents() {
+  try {
+    await connectToDatabase();
+
+    const events = await Event.find({ isApproved: false });
+    return JSON.parse(JSON.stringify(events));
   } catch (error) {
     handleError(error);
   }
@@ -360,6 +407,16 @@ export async function checkUserHasPurchasedTickets(
     await connectToDatabase();
     const event = await Event.findById(eventId);
     return event?.participants.includes(userId);
+  } catch (error) {
+    handleError(error);
+  }
+}
+
+export async function getTotalEvents() {
+  try {
+    await connectToDatabase();
+    const events = await Event.find();
+    return events.length;
   } catch (error) {
     handleError(error);
   }

@@ -109,3 +109,12 @@ export async function POST(req: Request) {
 
   return new Response("", { status: 200 });
 }
+
+export async function deleteUserFromClerk(userId: string) {
+  try {
+    await clerkClient.users.deleteUser(userId);
+    console.log(`User ${userId} deleted from Clerk.`);
+  } catch (error) {
+    console.error(`Failed to delete user ${userId} from Clerk:`, error);
+  }
+}

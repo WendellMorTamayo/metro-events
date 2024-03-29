@@ -9,6 +9,7 @@ const UserSchema = new Schema({
   photo: { type: String, required: true },
   isAdmin: { type: Boolean, default: false },
   notifications: [{ type: Schema.Types.ObjectId, ref: "Notification" }],
+  createdAt: { type: Date, default: Date.now },
 });
 
 const User = models.User || model("User", UserSchema);

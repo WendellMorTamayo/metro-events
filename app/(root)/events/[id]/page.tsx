@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { SearchParamProps } from "@/types";
 import {
   checkUserHasPurchasedTickets,
@@ -12,9 +12,10 @@ import Collection from "@/components/shared/Collection";
 import CheckOutButton from "@/components/shared/CheckOutButton";
 import { HeartButton } from "@/components/shared/HeartButton";
 import { auth } from "@clerk/nextjs";
-import { DataTable } from "@/components/shared/DataTable";
-import { columns } from "@/components/shared/columns";
 import { getParticipantsByEvent } from "@/lib/mongodb/actions/participant.actions";
+import { DataTable } from "@/components/shared/participant/data-table";
+import { columns } from "@/components/shared/participant/columns";
+import { getOrdersByEventId } from "@/lib/mongodb/actions/order.actions";
 
 const EventDetails = async ({
   params: { id },
@@ -23,7 +24,6 @@ const EventDetails = async ({
   const { sessionClaims } = auth();
   const userId = sessionClaims?.userId as string;
   const event = await getEventById(id);
-
   const relatedEvents = await getRelatedEventsByCategory({
     categoryId: event.category._id,
     eventId: id,
@@ -31,10 +31,12 @@ const EventDetails = async ({
   });
 
   const isUpvoted = await checkUserUpvoted(id, userId);
+  const eventOrders = await getOrdersByEventId(id);
   const participants = await getParticipantsByEvent(id);
-  const hasPurchased = participants
-    ? participants.user.includes(userId)
-    : false;
+  console.log("Participants::", participants);
+  const hasOrdered = eventOrders.filter((e: any) => e.buyer === userId) > 0;
+  const hasParticipated =
+    participants.filter((e: any) => e.userId === userId) > 0;
   return (
     <>
       <section
@@ -84,8 +86,9 @@ const EventDetails = async ({
               <HeartButton eventId={id} userId={userId} isUpvoted={isUpvoted} />
               <CheckOutButton
                 event={event}
-                participants={[participants]}
-                hasPurchased={hasPurchased}
+                participants={[eventOrders]}
+                hasPurchased={hasOrdered}
+                hasParticipated={hasParticipated}
               />
             </div>
 
@@ -142,7 +145,7 @@ const EventDetails = async ({
       </section>
       <section className={"wrapper my-8 flex flex-col gap-8 md:gap-12"}>
         <h2 className={"h2-bold"}>Related Events</h2>
-        {participants && <DataTable columns={columns} data={participants} />}
+        {eventOrders && <DataTable columns={columns} data={eventOrders} />}
       </section>
       <section className={"wrapper my-8 flex flex-col gap-8 md:gap-12"}>
         <h2 className={"h2-bold"}>Related Events</h2>

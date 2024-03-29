@@ -52,6 +52,6 @@ export const columns: ColumnDef<Participant>[] = [
   {
     id: "isApproved",
     header: "Actions",
-    cell: ({ row }) => <ParticipantRowActions user={row.original} />,
+    cell: ({ row }) => <ParticipantRowActions event={row.original} />,
   },
 ];

@@ -15,7 +15,6 @@ export async function sendNotification(userId: string, message: string) {
       $push: { notifications: notification._id },
     });
     console.log("Notification sent:", notification);
-
     return notification;
   } catch (error) {
     handleError(error);
@@ -25,14 +24,15 @@ export async function sendNotification(userId: string, message: string) {
 export async function getNotifications(userId: string) {
   try {
     await connectToDatabase();
+    const notifications = await Notification.find({ user: userId }).sort({
+      createdAt: "desc",
+    });
 
-    const user = await User.findById(userId).populate("notifications");
-
-    if (!user) {
+    if (!notifications) {
       throw new Error("User not found");
     }
 
-    return user.notifications;
+    return JSON.parse(JSON.stringify(notifications));
   } catch (error) {
     handleError(error);
   }
@@ -53,6 +53,26 @@ export async function clearNotifications(userId: string) {
     }
 
     return user.notifications;
+  } catch (error) {
+    handleError(error);
+  }
+}
+
+export async function readNotification(notificationId: string) {
+  try {
+    await connectToDatabase();
+
+    const notification = await Notification.findByIdAndUpdate(
+      notificationId,
+      { read: true },
+      { new: true },
+    );
+
+    if (!notification) {
+      throw new Error("Notification not found");
+    }
+
+    return JSON.parse(JSON.stringify(notification));
   } catch (error) {
     handleError(error);
   }

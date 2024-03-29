@@ -37,7 +37,7 @@ export const createParticipant = async ({
     const newParticipant = await Participant.create({
       name,
       email,
-      isApproved: false,
+      isApproved: true,
       user: userId,
       event: eventId,
     });
@@ -63,7 +63,7 @@ export const getParticipantsByEvent = async (eventId: string) => {
   try {
     await connectToDatabase();
     console.log("EVENT ID: ", eventId);
-    const participants = await Participant.findOne({ event: eventId });
+    const participants = await Participant.find({ event: eventId });
     console.log("PARTICIPANTS: ", participants);
     return JSON.parse(JSON.stringify(participants));
   } catch (error) {

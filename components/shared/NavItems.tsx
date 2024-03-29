@@ -4,15 +4,18 @@ import { headerLinks } from "@/constants";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import React from "react";
-import NotificationIcon from "@/components/shared/NotifcationIcon";
 
-const NavItems = () => {
+const NavItems = ({ isAdmin }: { isAdmin: boolean }) => {
   const pathname = usePathname();
+
+  const filteredLinks = isAdmin
+    ? headerLinks
+    : headerLinks.filter((link) => link.label !== "Admin");
 
   return (
     <>
       <ul className="md:flex-between flex w-full flex-col items-start gap-5 md:flex-row">
-        {headerLinks.map((link) => {
+        {filteredLinks.map((link) => {
           const isActive = pathname === link.route;
           return (
             <li

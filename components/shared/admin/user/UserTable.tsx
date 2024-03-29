@@ -1,5 +1,5 @@
 "use client";
-import { DataTable } from "@/components/shared/data-table";
+import { DataTable } from "@/components/shared/admin/user/data-table";
 import { columns as userColumns } from "@/components/shared/admin/user/columns";
 import { getAllUsers } from "@/lib/mongodb/actions/user.actions";
 import { useMemo, useEffect, useState } from "react";

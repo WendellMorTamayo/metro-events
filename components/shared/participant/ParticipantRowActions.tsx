@@ -20,7 +20,7 @@ export default function ParticipantRowActions({ event }: any) {
         <ApproveParticipantConfirmation
           event={event}
           eventId={event._id}
-          userId={event.organizer}
+          userId={event.buyer}
         />
       </Button>
       <Button
